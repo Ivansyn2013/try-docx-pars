@@ -34,6 +34,7 @@ def time_valid(date_str):
     else:
         return False
 
+
 START_DATE = datetime.datetime.strptime(get_config_file().get('даты проведения цикла'), '%d.%m.%Y')
 # забор файла
 doc = docx.Document(r'G:\Python project\try-docx-pars\sample_files\PK(144hours).docx')
@@ -61,34 +62,29 @@ print(len(tabel.columns[0].cells))
 # print(tabel.cell(0,0).text)
 k = 0
 
-
 i = 0
 
 for tabel in doc.tables:
 
-            for cell in tabel.columns[0].cells:
+    for cell in tabel.columns[0].cells:
 
+        if time_valid(cell.text) and i < 1:
+            cell.text = re.sub(RE_DATE, (START_DATE.date().strftime('%d.%m.%Y')), cell.text)
 
+            i += 1
+        elif time_valid(cell.text):
+            if i % 3 == 0:
+                delta_time = START_DATE + datetime.timedelta(days=i // 3)
+                if delta_time.weekday() == 6:
+                    delta_time += datetime.timedelta(days=1)
 
+                cell.text = re.sub(RE_DATE, delta_time.date().strftime('%d.%m.%Y'), cell.text)
+                cell.text.replace(cell.text, delta_time.date().strftime('%d.%m.%Y'))
+                print(cell.text)
+            else:
+                pass
+        i += 1
+        # print(cell.text)
 
-                if time_valid(cell.text) and i<1:
-                    cell.text = re.sub(RE_DATE, (START_DATE.date().strftime('%d.%m.%Y')), cell.text)
-
-                    i+=1
-                elif time_valid(cell.text):
-                    if i%3 == 0 :
-                        delta_time = START_DATE + datetime.timedelta(days=i//3)
-                        if delta_time.weekday() == 6:
-                            delta_time +=datetime.timedelta(days=1)
-
-                        cell.text = re.sub(RE_DATE, delta_time.date().strftime('%d.%m.%Y'), cell.text)
-                        cell.text.replace(cell.text, delta_time.date().strftime('%d.%m.%Y') )
-                        print(cell.text)
-                    else:
-                        pass
-                i+=1
-                #print(cell.text)
-
-
-        # сохранение объекта файла
+# сохранение объекта файла
 doc.save(r'G:\Python project\try-docx-pars\ready1.docx')
