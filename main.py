@@ -60,8 +60,8 @@ print(len(tabel.columns[0].cells))
 # print(tabel.columns[0].cells[4].text)
 # print(tabel.cell(4,0).text)
 # print(tabel.cell(0,0).text)
-k = 0
 
+k = 0
 i = 0
 
 for tabel in doc.tables:
@@ -87,4 +87,4 @@ for tabel in doc.tables:
         # print(cell.text)
 
 # сохранение объекта файла
-doc.save(r'G:\Python project\try-docx-pars\ready1.docx')
+doc.save(r'G:\Python project\try-docx-pars\output\ready1.docx')
