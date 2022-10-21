@@ -6,7 +6,7 @@ import re
 
 temp_date = datetime.datetime.now()
 RE_DATE = re.compile(r'(\d{2}\.\d{2})\.\d{4}')
-
+WEEKDAYS = ['Понедельник', 'Вторник','Среда','Четверг','Пятница', 'Суббота', 'Воскресенье']
 
 def run_config_file():
     '''создание файла для конфигурации'''
@@ -55,7 +55,7 @@ list = []
 # выбор первого столбца таблицы
 
 tabel = doc.tables[0]
-print(len(tabel.columns[0].cells))
+#print(len(tabel.columns[0].cells))
 
 # print(tabel.columns[0].cells[4].text)
 # print(tabel.cell(4,0).text)
@@ -67,23 +67,32 @@ flag_cellmerge = False
 
 for tabel in doc.tables:
 
-    for cell in tabel.columns[0].cells:
+    for cell in tabel.columns[0].cells[0:]:
+        # if 'vMerge' in cell._tc.xml:
+        #     flag_cellmerge = not flag_cellmerge
 
-        if time_valid(cell.text) and i < 1:
-            cell.text = re.sub(RE_DATE, (START_DATE.date().strftime('%d.%m.%Y')), cell.text)
+        if flag_cellmerge == False:
+            if time_valid(cell.text) and i < 1:
+                cell.text = re.sub(RE_DATE, (START_DATE.date().strftime('%d.%m.%Y')), cell.text)
 
-            i += 1
-        elif time_valid(cell.text):
-            if i % 3 == 0:
-                delta_time = START_DATE + datetime.timedelta(days=i // 3)
-                if delta_time.weekday() == 6:
-                    delta_time += datetime.timedelta(days=1)
+                i += 1
+            elif time_valid(cell.text):
+                if i % 3 == 0:
+                    delta_time = START_DATE + datetime.timedelta(days=i // 3)
+                    if delta_time.weekday() == 6:
+                        delta_time += datetime.timedelta(days=1)
 
-                cell.text = re.sub(RE_DATE, delta_time.date().strftime('%d.%m.%Y'), cell.text)
-                cell.text.replace(cell.text, delta_time.date().strftime('%d.%m.%Y'))
-                print(cell.text)
-            else:
-                pass
+
+                    cell.text = str(delta_time.date().strftime('%d.%m.%Y')+ '\n' +WEEKDAYS[delta_time.weekday()])
+
+                    #cell.text = re.sub(RE_DATE, delta_time.date().strftime('%d.%m.%Y'), cell.text)
+                    #cell.text.replace(cell.text, delta_time.date().strftime('%d.%m.%Y') + WEEKDAYS[
+                    # delta_time.weekday()])
+
+                    print(cell.text)
+
+                else:
+                    pass
         i += 1
         # print(cell.text)
 
