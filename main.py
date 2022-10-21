@@ -63,6 +63,7 @@ print(len(tabel.columns[0].cells))
 
 k = 0
 i = 0
+flag_cellmerge = False
 
 for tabel in doc.tables:
 

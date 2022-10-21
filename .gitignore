@@ -1,0 +1,9 @@
+# created by virtualenv automatically
+*
+Lib
+docx-template
+test.py
+Scripts
+.idea
+tmp
+output
