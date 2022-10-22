@@ -1,7 +1,7 @@
 import docx
 import json
 import time, datetime
-
+from datetime import datetime as dt
 import re
 
 temp_date = datetime.datetime.now()
@@ -34,67 +34,61 @@ def time_valid(date_str):
     else:
         return False
 
-
+#забор даты из конфига
 START_DATE = datetime.datetime.strptime(get_config_file().get('даты проведения цикла'), '%d.%m.%Y')
 # забор файла
-doc = docx.Document(r'G:\Python project\try-docx-pars\sample_files\PK(144hours).docx')
+CONFIG = get_config_file()
+if CONFIG['количество часов'] == '144':
+    doc = docx.Document(r'G:\Python project\try-docx-pars\input\144.docx')
+    OUTFILE = r'G:\Python project\try-docx-pars\output\{}144.docx'
+elif CONFIG['количество часов'] == '572':
+    doc = docx.Document(r'G:\Python project\try-docx-pars\input\572.docx')
+    OUTFILE = r'G:\Python project\try-docx-pars\output\{}572.docx'
+else:
+    raise Exception('Не указан фаил')
+#забор праздничных дней из конфига
+HOLYDAYS = CONFIG['праздничные дни']
+HOLYDAYS = [dt.strptime(x, '%d.%m.%Y') for x in HOLYDAYS]
 
-# print(len(doc.paragraphs))
 
-# print((doc.paragraphs[4].text))
-
-line = doc.paragraphs[4]
-list = []
-
-# for el1 in doc.paragraphs:
-#     for el2 in el1.runs:
-#         print(el2.text.split(' ')[0])
-
-# print(line.runs[0].text)
 
 # выбор первого столбца таблицы
 
 tabel = doc.tables[0]
 #print(len(tabel.columns[0].cells))
 
-# print(tabel.columns[0].cells[4].text)
-# print(tabel.cell(4,0).text)
-# print(tabel.cell(0,0).text)
-
-k = 0
-i = 0
-flag_cellmerge = False
+k = 1
+i = 1
+unique, merged = set(), set()
 
 for tabel in doc.tables:
 
-    for cell in tabel.columns[0].cells[0:]:
+    for cell in tabel.columns[0].cells[1:]:
         # if 'vMerge' in cell._tc.xml:
         #     flag_cellmerge = not flag_cellmerge
 
-        if flag_cellmerge == False:
-            if time_valid(cell.text) and i < 1:
-                cell.text = re.sub(RE_DATE, (START_DATE.date().strftime('%d.%m.%Y')), cell.text)
+        delta_time = START_DATE + datetime.timedelta(days=i-1)
+        tc = cell._tc # защищенный параметр с xml кодом
+        cell_loc = (tc.top, tc.bottom, tc.left, tc.right) # координаты ячейки
 
-                i += 1
-            elif time_valid(cell.text):
-                if i % 3 == 0:
-                    delta_time = START_DATE + datetime.timedelta(days=i // 3)
-                    if delta_time.weekday() == 6:
-                        delta_time += datetime.timedelta(days=1)
+        if delta_time.weekday() == 6 or delta_time in HOLYDAYS:   # воскресенье
+            i+=1
+            continue
 
 
-                    cell.text = str(delta_time.date().strftime('%d.%m.%Y')+ '\n' +WEEKDAYS[delta_time.weekday()])
-
-                    #cell.text = re.sub(RE_DATE, delta_time.date().strftime('%d.%m.%Y'), cell.text)
-                    #cell.text.replace(cell.text, delta_time.date().strftime('%d.%m.%Y') + WEEKDAYS[
-                    # delta_time.weekday()])
-
-                    print(cell.text)
-
-                else:
-                    pass
+        if cell_loc in unique:
+            merged.add(cell_loc)
+            continue
+        else:
+            unique.add(cell_loc)
+            cell.text = str(str(k) + ')'+ delta_time.date().strftime('%d.%m.%Y') + '\n' + WEEKDAYS[
+            delta_time.weekday()])
+            k+=1
         i += 1
-        # print(cell.text)
+
+        print(cell.text)
+
+
 
 # сохранение объекта файла
-doc.save(r'G:\Python project\try-docx-pars\output\ready1.docx')
+doc.save(OUTFILE.format(START_DATE.strftime('%d.%m.%Y')))
